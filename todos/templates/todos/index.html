@@ -5,60 +5,268 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- title row -->
-  <div class="row">
-    <div class="offset-md-2 col-lg-9">
-      <div class="page-header">
-        <h1>
-          Todo List 
-        </h1>
-      </div>
-    </div>
+<style>
+  :root {
+    --bg: #eef1f6;
+    --surface: #ffffff;
+    --ink: #1b2333;
+    --muted: #7b8499;
+    --line: #dde2ec;
+    --accent: #3d4ddb;
+    --accent-soft: #e6e9fc;
+    --done: #2e9e6b;
+    --danger: #d64550;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+
+  .todo-app {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 3rem 1rem 4rem;
+  }
+
+  .todo-app h1 {
+    font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+    font-weight: 700;
+    font-size: 2.6rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 .25rem;
+  }
+
+  .todo-summary {
+    color: var(--muted);
+    margin-bottom: .75rem;
+  }
+
+  .todo-progress {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--line);
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .todo-progress-bar {
+    height: 100%;
+    width: 0;
+    background: var(--done);
+    border-radius: 999px;
+    transition: width .4s ease;
+  }
+
+  /* add form */
+  .todo-add {
+    display: flex;
+    gap: .5rem;
+    background: var(--surface);
+    padding: .5rem;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    box-shadow: 0 6px 20px rgba(27, 35, 51, .06);
+    margin-bottom: 1.75rem;
+  }
+
+  .todo-add input[type="text"] {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 1.05rem;
+    padding: .6rem .75rem;
+    color: var(--ink);
+  }
+
+  .todo-add input[type="text"]::placeholder { color: var(--muted); }
+
+  .todo-add button {
+    border: 0;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+    padding: .6rem 1.4rem;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+
+  .todo-add button:hover { background: #2f3cc0; }
+
+  .todo-add:focus-within,
+  .todo-add button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* list */
+  .todo-items {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: .85rem 1rem;
+    transition: border-color .15s ease, background .15s ease;
+  }
+
+  .todo-item:hover { border-color: var(--accent); }
+
+  .todo-item form { display: flex; margin: 0; }
+
+  .todo-item .todo-status-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid #b4bccd;
+    border-radius: 50%;
+    cursor: pointer;
+    display: grid;
+    place-content: center;
+    transition: all .15s ease;
+    margin: 0;
+  }
+
+  .todo-item .todo-status-checkbox::after {
+    content: "";
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) scale(0);
+    transition: transform .15s ease;
+    margin-top: -2px;
+  }
+
+  .todo-item .todo-status-checkbox:checked {
+    background: var(--done);
+    border-color: var(--done);
+  }
+
+  .todo-item .todo-status-checkbox:checked::after {
+    transform: rotate(-45deg) scale(1);
+  }
+
+  .todo-item .todo-status-checkbox:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .todo-title {
+    flex: 1;
+    word-break: break-word;
+  }
+
+  .todo-complete .todo-title {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .todo-complete { background: #f7f9fc; }
+
+  .todo-delete {
+    color: var(--muted);
+    padding: .35rem .5rem;
+    border-radius: 8px;
+    opacity: 0;
+    transition: all .15s ease;
+  }
+
+  .todo-item:hover .todo-delete,
+  .todo-delete:focus-visible { opacity: 1; }
+
+  .todo-delete:hover {
+    color: var(--danger);
+    background: #fbe9ea;
+    text-decoration: none;
+  }
+
+  /* touch screens have no hover, so keep delete visible */
+  @media (hover: none) {
+    .todo-delete { opacity: 1; }
+  }
+
+  .todo-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 2.5rem 1rem;
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+
+<div class="todo-app">
+
+  <!-- title -->
+  <h1>Todo list</h1>
+  <p class="todo-summary" id="todo-summary">
+    {{ todo_list|length }} task{{ todo_list|length|pluralize }}
+  </p>
+  <div class="todo-progress" aria-hidden="true">
+    <div class="todo-progress-bar" id="todo-progress-bar"></div>
   </div>
 
-  <!-- Add a todo row -->
-  <div class="row">
-    <div class="offset-md-2 col-lg-9">
-      <form method="post" action="{% url 'todos:add' %}">
+  <!-- add a todo -->
+  <form class="todo-add" method="post" action="{% url 'todos:add' %}">
+    {% csrf_token %}
+    <input type="text" name="title" placeholder="What needs doing? e.g. Do laundry" required autocomplete="off">
+    <button type="submit" name="submit">Add task</button>
+  </form>
+
+  <!-- todo list -->
+  <div class="todo-items">
+    {% for todo in todo_list %}
+    <div class="todo-item {% if todo.isCompleted %}todo-complete{% endif %}">
+      <form method="post" action="{% url 'todos:update' todo.id %}">
         {% csrf_token %}
-        <div class="form-row">
-          <div class="col-md-6">
-            <input type="text" class="form-control" name="title" placeholder="Do laundry" required>
-          </div>
-          <div class="col-md-6">
-            <button type="submit" name="submit" class="btn btn-outline-primary">
-              Add
-            </button>
-          </div>
-        </div>
+        <input type="checkbox" name="isCompleted" onchange="this.form.submit()"
+          {% if todo.isCompleted %}checked{% endif %}
+          class="todo-status-checkbox"
+          aria-label="{% if todo.isCompleted %}Mark as not done{% else %}Mark as done{% endif %}"
+          title="{% if todo.isCompleted %}Mark as not done{% else %}Mark as done{% endif %}">
       </form>
+      <span class="todo-title">{{ todo.title }}</span>
+      <a href="{% url 'todos:delete' todo.id %}" class="todo-delete" title="Delete task" aria-label="Delete task"
+        onclick="return confirm('Delete this task?');">
+        <i class="far fa-trash-alt"></i>
+      </a>
     </div>
-  </div>
-  <hr />
-
-  <!-- todo list row -->
-  <div class="row">
-    <div class="offset-md-2 col-lg-6">
-      <div class="list-group">
-        {% for todo in todo_list %}
-        <div class="list-group-item {% if todo.isCompleted %} todo-complete {% endif %}">
-          <form style="display: inline;" method="post" action="{% url 'todos:update' todo.id %}">
-            {% csrf_token %}
-            <input type="checkbox" name="isCompleted" onchange="this.form.submit()" {% if todo.isCompleted %} checked
-              {% endif %} class="todo-status-checkbox"
-              title="{% if not todo.isCompleted %} mark as done {% else %} mark undone {% endif %}">
-          </form>
-          {{ todo.title }}
-          <a href="{% url 'todos:delete' todo.id %}" title="Delete">
-            <i class="far fa-trash-alt"></i>
-          </a>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
+    {% empty %}
+    <div class="todo-empty">Nothing here yet. Add your first task above.</div>
+    {% endfor %}
   </div>
 </div>
+
+<script>
+  (function () {
+    var boxes = document.querySelectorAll('.todo-status-checkbox');
+    var total = boxes.length;
+    if (!total) return;
+    var done = document.querySelectorAll('.todo-status-checkbox:checked').length;
+    document.getElementById('todo-summary').textContent =
+      done + ' of ' + total + ' done';
+    document.getElementById('todo-progress-bar').style.width =
+      Math.round((done / total) * 100) + '%';
+  })();
+</script>
 
 {% endblock %}
